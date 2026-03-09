@@ -1,0 +1,9 @@
+# traefik/dynamic/tls.yml
+# Dynamic TLS configuration
+# Can be updated without restarting Traefik
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict: true

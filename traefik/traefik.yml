@@ -1,0 +1,43 @@
+# traefik/traefik.yml
+# Static configuration — requires restart to apply changes
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+api:
+  dashboard: true
+  insecure: false
+
+log:
+  level: INFO
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "tcp://socket-proxy:2375"   # via socket-proxy, not direct socket
+    exposedByDefault: false
+    network: eigen-web
+  file:
+    directory: /dynamic/
+    watch: true
+
+# --- Local TLS (mkcert) ---
+# For production: replace with Let's Encrypt ACME block
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/local.crt
+        keyFile: /certs/local.key

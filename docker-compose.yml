@@ -1,0 +1,133 @@
+# =============================================================================
+# eigenstack — core + vaultwarden
+# Usage:
+#   make up       → start all services
+#   make down     → stop all services
+#   make logs     → follow logs
+#   make status   → show running containers
+# =============================================================================
+
+networks:
+  eigen-web:
+    name: eigen-web
+  eigen-docker-proxy:
+    name: eigen-docker-proxy
+    internal: true   # no internet access — security
+
+volumes:
+  traefik-certs:
+  vaultwarden-data:
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # docker-socket-proxy
+  # Prevents direct /var/run/docker.sock exposure to Traefik
+  # Only exposes read-only container/network APIs
+  # ---------------------------------------------------------------------------
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: eigenstack-socket-proxy
+    restart: unless-stopped
+    networks:
+      - eigen-docker-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CONTAINERS: 1
+      NETWORKS: 1
+      SERVICES: 1
+      TASKS: 1
+      # Everything else denied by default
+      POST: 0
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # Traefik v3
+  # Reverse proxy + automatic TLS (mkcert locally, Let's Encrypt on prod)
+  # ---------------------------------------------------------------------------
+  traefik:
+    image: traefik:v3.0
+    container_name: eigenstack-traefik
+    restart: unless-stopped
+    depends_on:
+      - socket-proxy
+    networks:
+      - eigen-web
+      - eigen-docker-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - ./traefik/dynamic/:/dynamic/:ro
+      - traefik-certs:/certs
+    environment:
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # Whoami — test service
+  # Verify Traefik routing works before adding real apps
+  # Remove after validation
+  # ---------------------------------------------------------------------------
+  whoami:
+    image: traefik/whoami:latest
+    container_name: eigenstack-whoami
+    restart: unless-stopped
+    networks:
+      - eigen-web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.whoami.tls=true"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # Vaultwarden
+  # Self-hosted Bitwarden-compatible password manager
+  # Lightweight (~10MB), DSGVO-friendly
+  # ---------------------------------------------------------------------------
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: eigenstack-vaultwarden
+    restart: unless-stopped
+    networks:
+      - eigen-web
+    volumes:
+      - vaultwarden-data:/data
+    environment:
+      - TZ=${TZ}
+      - DOMAIN=https://${VAULTWARDEN_HOST}
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - SIGNUPS_ALLOWED=false    # disable public registration
+      - WEBSOCKET_ENABLED=true
+      - LOG_LEVEL=warn
+    labels:
+      - "traefik.enable=true"
+      # Main UI
+      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_HOST}`)"
+      - "traefik.http.routers.vaultwarden.tls=true"
+      - "traefik.http.routers.vaultwarden.entrypoints=websecure"
+      - "traefik.http.routers.vaultwarden.service=vaultwarden"
+      - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
+      # WebSocket (needed for live sync)
+      - "traefik.http.routers.vaultwarden-ws.rule=Host(`${VAULTWARDEN_HOST}`) && Path(`/notifications/hub`)"
+      - "traefik.http.routers.vaultwarden-ws.tls=true"
+      - "traefik.http.routers.vaultwarden-ws.entrypoints=websecure"
+      - "traefik.http.routers.vaultwarden-ws.service=vaultwarden-ws"
+      - "traefik.http.services.vaultwarden-ws.loadbalancer.server.port=3012"
+    security_opt:
+      - no-new-privileges:true
