@@ -1,3 +1,5 @@
 .env
 certs/
+traefik/certs/
 backups/
+claude.md

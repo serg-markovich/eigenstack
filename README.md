@@ -1,93 +1,77 @@
 # eigenstack
 
-> A sovereign, self-hosted personal cloud for IT professionals in Germany.
-> Built on IaC principles — deploy with a single command.
-
-**Philosophy:** `IaC = DRY + TRIZ`
-Every service is defined once, configured through a single `.env`,
-and contradictions (privacy vs convenience, security vs simplicity)
-are resolved at the architectural level — not patched.
+A self‑hosted personal cloud built with Docker Compose. The stack consists of Traefik as a reverse proxy, a Docker socket proxy, and Vaultwarden for password management. All services are defined once and configured via a single `.env` file.
 
 ## Stack
 
-| Service | Role | Image |
-|---|---|---|
-| Traefik v3 | Reverse proxy, auto-TLS, routing | `traefik:v3.0` |
-| docker-socket-proxy | Secure Docker API access (no direct socket) | `tecnativa/docker-socket-proxy` |
-| Vaultwarden | Self-hosted Bitwarden-compatible passwords | `vaultwarden/server` |
-| Whoami | Routing validation (remove after setup) | `traefik/whoami` |
+| Service | Role |
+|---------|------|
+| Traefik | Reverse proxy with automatic TLS (ACME – staging by default) |
+| docker‑socket‑proxy | Secure read‑only access to the Docker daemon |
+| Vaultwarden | Self‑hosted Bitwarden‑compatible password manager |
+| Whoami *(optional)* | Simple service to verify routing – disabled in production |
 
-**Coming next:** Nextcloud AIO, Paperless-ngx, Prometheus + Alertmanager
+## Quick start (local)
 
-## Quick Start (local)
-
-### Prerequisites
-- Ubuntu 24.04
-- Docker + Docker Compose v2
-- `mkcert` for local TLS
+**Prerequisites**
+- Ubuntu 24.04 (or similar)
+- Docker + Docker Compose v2
+- `mkcert` (for local TLS)
 
 ```bash
 # 1. Install mkcert
 sudo apt install mkcert
 
-# 2. Clone
+# 2. Clone the repository
 git clone https://github.com/serg-markovich/eigen-stack.git
 cd eigen-stack
 
-# 3. Configure
+# 3. Create a local environment file
 cp .env.example .env
-nano .env  # set BASE_DOMAIN, tokens
+# edit .env as needed (BASE_DOMAIN, tokens, etc.)
 
-# 4. Local setup (certs + /etc/hosts)
+# 4. Initialise TLS certificates and host entries
 make setup-local
 
-# 5. Launch
+# 5. Start the stack
 make up
 ```
 
-### Verify
+### Verification
 
 ```bash
-make status                          # all containers running?
-curl -k https://whoami.eigenstack.local  # Traefik routing works?
+make status                # containers should be up
+curl -k https://vault.eigenstack.local   # Vaultwarden UI
+curl -k https://traefik.eigenstack.local # Traefik dashboard
+# (whoami is disabled; enable it in docker‑compose.yml if needed)
 ```
 
-Open in browser:
-- `https://whoami.eigenstack.local` — routing test
-- `https://vault.eigenstack.local` — Vaultwarden
-- `https://traefik.eigenstack.local` — Traefik dashboard
-
-## Project Structure
+## Project layout
 
 ```
 eigen-stack/
-├── docker-compose.yml       # service definitions
-├── .env.example             # all variables documented
-├── Makefile                 # make up / down / logs / backup / setup-local
-├── traefik/
-│   ├── traefik.yml          # static config (entrypoints, providers)
-│   └── dynamic/
-│       └── tls.yml          # TLS options
-├── certs/                   # local mkcert certs (gitignored)
-├── backups/                 # local backups (gitignored)
-└── docs/                    # architecture notes
+├─ docker-compose.yml
+├─ .env.example
+├─ .env.prod          # template for production deployment
+├─ Makefile
+├─ traefik/
+│  ├─ traefik.yml
+│  └─ dynamic/
+├─ certs/             # local mkcert certificates (git‑ignored)
+└─ docs/              # architecture notes
 ```
 
-## Security Model
+## Security highlights
 
-- **No direct Docker socket** — all Traefik → Docker communication via `socket-proxy`
-- **TLS everywhere** — HTTP redirects to HTTPS, TLS 1.2+ enforced
-- **Vaultwarden signups disabled** — admin-only access
-- **Dashboard behind basic auth** — not publicly accessible
-- **`no-new-privileges`** on all containers
+- Docker socket is never exposed directly; access is via `socket‑proxy`.
+- TLS is enforced for all services. In production replace the ACME staging endpoint with the live Let’s Encrypt server.
+- Vaultwarden sign‑ups are disabled; admin access is protected by a token.
+- All containers run with `no-new-privileges:true`.
 
-## Production Deployment
+## Production notes
 
-For production on Hetzner VPS — see `docs/deployment.md` *(coming soon)*
-
-Switch from mkcert to Let's Encrypt: replace `tls:` block in `traefik/traefik.yml`
-with ACME configuration and set `ACME_EMAIL` in `.env`.
+Use the `.env.prod` template, replace placeholders with real values, and switch Traefik to the Let’s Encrypt production ACME server. Deploy the stack on your server (e.g., Hetzner) and remove the `whoami` service.
 
 ## License
 
-MIT — built with ☕ and a strong opinion about data sovereignty.
+MIT

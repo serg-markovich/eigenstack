@@ -26,18 +26,26 @@ entryPoints:
 
 providers:
   docker:
-    endpoint: "tcp://socket-proxy:2375"   # via socket-proxy, not direct socket
+    endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: eigen-web
   file:
     directory: /dynamic/
     watch: true
 
-# --- Local TLS (mkcert) ---
-# For production: replace with Let's Encrypt ACME block
+# --- ACME (Let's Encrypt) Staging ---
+# Production will switch to the live ACME server
 tls:
   stores:
     default:
       defaultCertificate:
-        certFile: /certs/local.crt
-        keyFile: /certs/local.key
+        certFile: /certs/acme.json
+        keyFile: /certs/acme.json
+  certificatesResolvers:
+    le:
+      acme:
+        email: ${ACME_EMAIL}
+        storage: /certs/acme.json
+        caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+        httpChallenge:
+          entryPoint: web

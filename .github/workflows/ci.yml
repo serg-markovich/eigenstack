@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Docker Compose
+        run: docker compose config --quiet
+
+      - name: Pull latest images
+        run: docker compose pull
+
+      - name: Start stack (staging TLS)
+        env:
+          BASE_DOMAIN: eigenstack.local
+          ACME_EMAIL: dummy@example.com
+          TRAEFIK_DASHBOARD_AUTH: ${{ secrets.TRAEFIK_DASHBOARD_AUTH }}
+        run: |
+          make setup-local || true
+          docker compose up -d
+          sleep 15
+          curl -k https://vault.eigenstack.local || true
+
+      - name: Run Trivy scan
+        run: |
+          docker run --rm -v $(pwd):/project aquasec/trivy filesystem /project

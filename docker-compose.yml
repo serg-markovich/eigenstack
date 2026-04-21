@@ -15,7 +15,6 @@ networks:
     internal: true   # no internet access — security
 
 volumes:
-  traefik-certs:
   vaultwarden-data:
 
 services:
@@ -47,8 +46,8 @@ services:
   # Traefik v3
   # Reverse proxy + automatic TLS (mkcert locally, Let's Encrypt on prod)
   # ---------------------------------------------------------------------------
-  traefik:
-    image: traefik:v3.0
+  traefik: 
+    image: traefik:v3.6.1
     container_name: eigenstack-traefik
     restart: unless-stopped
     depends_on:
@@ -62,9 +61,11 @@ services:
     volumes:
       - ./traefik/traefik.yml:/traefik.yml:ro
       - ./traefik/dynamic/:/dynamic/:ro
-      - traefik-certs:/certs
+      - ./traefik/certs:/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=${TZ}
+      - DOCKER_API_VERSION=1.54
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST}`)"
@@ -81,19 +82,20 @@ services:
   # Verify Traefik routing works before adding real apps
   # Remove after validation
   # ---------------------------------------------------------------------------
-  whoami:
-    image: traefik/whoami:latest
-    container_name: eigenstack-whoami
-    restart: unless-stopped
-    networks:
-      - eigen-web
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.${BASE_DOMAIN}`)"
-      - "traefik.http.routers.whoami.tls=true"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-    security_opt:
-      - no-new-privileges:true
+  # whoami service disabled for production mode
+  # whoami:
+  #   image: traefik/whoami:latest
+  #   container_name: eigenstack-whoami
+  #   restart: unless-stopped
+  #   networks:
+  #     - eigen-web
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.whoami.rule=Host(`whoami.${BASE_DOMAIN}`)"
+  #     - "traefik.http.routers.whoami.tls=true"
+  #     - "traefik.http.routers.whoami.entrypoints=websecure"
+  #   security_opt:
+  #     - no-new-privileges:true
 
   # ---------------------------------------------------------------------------
   # Vaultwarden
