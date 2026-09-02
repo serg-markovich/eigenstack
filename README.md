@@ -96,6 +96,30 @@ eigenstack/
 └─ CHANGELOG.md
 ```
 
+## Backup
+
+Vaultwarden data can be backed up manually or automatically.
+
+### Manual backup
+
+```bash
+make backup
+```
+
+Backups are saved to `backups/vaultwarden-YYYYMMDD-HHMMSS.sqlite3`.
+
+### Automated backup
+
+Add a cron job to run the backup daily at 03:00:
+
+```bash
+crontab -e
+```
+
+```cron
+0 3 * * * cd ~/eigenstack && make backup
+```
+
 ## Security highlights
 
 - Docker socket is never exposed directly; access is via `socket-proxy`.

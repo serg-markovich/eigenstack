@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file.
 
 ## [1.1.0] - 2026-09-02
 - Switched Traefik ACME from Let's Encrypt staging to production CA.
+- Wired Traefik Docker provider through `socket-proxy` instead of direct `/var/run/docker.sock` access.
 - Fixed automatic TLS certificate issuance for production subdomains.
 - Removed invalid `defaultCertificate` pointing at `acme.json`.
 - Explicitly bound Docker routers to the `le` certificate resolver.

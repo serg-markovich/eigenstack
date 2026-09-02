@@ -48,6 +48,6 @@ setup-local:
 backup:
 	@mkdir -p backups
 	@echo "💾 Backing up Vaultwarden..."
-	docker compose exec vaultwarden sqlite3 /data/db.sqlite3 ".backup '/data/db.backup.sqlite3'"
+	docker compose exec -T vaultwarden sqlite3 /data/db.sqlite3 ".backup '/data/db.backup.sqlite3'"
 	docker cp eigenstack-vaultwarden:/data/db.backup.sqlite3 backups/vaultwarden-$$(date +%Y%m%d-%H%M%S).sqlite3
 	@echo "✅ Backup saved to backups/"
