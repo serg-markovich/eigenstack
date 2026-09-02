@@ -23,6 +23,9 @@ entryPoints:
           permanent: true
   websecure:
     address: ":443"
+    http:
+      tls:
+        certResolver: le
 
 providers:
   docker:
