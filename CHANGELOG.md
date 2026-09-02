@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file.
 - Added Traefik access logs and fail2ban configuration for dashboard brute-force protection.
 - Enabled `accessLog.addInternals` so dashboard 401 events are visible to fail2ban.
 - Set `backend = auto` in the fail2ban jail for file-based access log monitoring.
+- Added logrotate template for the Traefik access log.
 - Deployed and verified the stack on a VPS.
 
 ## [1.0.0] - 2026-04-21

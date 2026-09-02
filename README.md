@@ -92,6 +92,8 @@ eigenstack/
 ├─ traefik/
 │  ├─ traefik.yml
 │  └─ dynamic/
+├─ scripts/
+│  └─ logrotate-traefik.conf  # logrotate template for access log
 ├─ certs/             # local mkcert / ACME certificates (git-ignored)
 └─ CHANGELOG.md
 ```
@@ -180,6 +182,19 @@ ignoreip = 127.0.0.1/8 ::1 <your-ip>
 - Vaultwarden sign-ups are disabled; admin access is protected by a token.
 - Traefik dashboard is protected by HTTP basic authentication.
 - All containers run with `no-new-privileges:true`.
+
+## Log rotation
+
+The Traefik access log is not rotated by default. To prevent `logs/traefik/access.log` from growing unbounded, copy the provided logrotate config and replace the path:
+
+```bash
+sudo cp scripts/logrotate-traefik.conf /etc/logrotate.d/traefik-access
+sudo nano /etc/logrotate.d/traefik-access
+# Replace /path/to/eigenstack with the real path
+sudo logrotate -d /etc/logrotate.d/traefik-access
+```
+
+`logrotate -d` performs a dry run and prints the rotation plan without touching files.
 
 ## Production notes
 
