@@ -62,6 +62,7 @@ services:
       - ./traefik/traefik.yml:/traefik.yml:ro
       - ./traefik/dynamic/:/dynamic/:ro
       - ./traefik/certs:/certs
+      - ./logs/traefik:/var/log/traefik
     environment:
       - TZ=${TZ}
       - TRAEFIK_CERTIFICATESRESOLVERS_LE_ACME_EMAIL=${ACME_EMAIL}

@@ -122,6 +122,47 @@ crontab -e
 
 Backups older than 7 days are removed automatically.
 
+## Brute-force protection
+
+The Traefik dashboard is exposed to the internet, so it should be protected from brute-force attacks with fail2ban.
+
+### Install fail2ban
+
+```bash
+sudo apt update
+sudo apt install fail2ban
+```
+
+### Copy the provided configs
+
+```bash
+cd ~/eigenstack
+sudo cp fail2ban/filter.d/traefik-dashboard.conf /etc/fail2ban/filter.d/
+sudo cp fail2ban/jail.d/traefik-dashboard.conf /etc/fail2ban/jail.d/
+```
+
+Edit the jail config and set the correct `logpath`:
+
+```bash
+sudo nano /etc/fail2ban/jail.d/traefik-dashboard.conf
+```
+
+Replace `/path/to/eigenstack/logs/traefik/access.log` with:
+
+```text
+logpath = /home/serg/eigenstack/logs/traefik/access.log
+```
+
+### Start fail2ban
+
+```bash
+sudo systemctl enable fail2ban
+sudo systemctl restart fail2ban
+sudo fail2ban-client status traefik-dashboard
+```
+
+The default jail bans an IP for 1 hour after 5 failed login attempts within 10 minutes.
+
 ## Security highlights
 
 - Docker socket is never exposed directly; access is via `socket-proxy`.
