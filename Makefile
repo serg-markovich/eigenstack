@@ -45,6 +45,7 @@ setup-local:
 	@echo "✅ Local setup complete. Run: make up"
 
 ## Backup Vaultwarden data
+## Keeps the last 7 days of backups.
 backup:
 	@mkdir -p backups
 	@echo "💾 Backing up Vaultwarden..."
@@ -52,4 +53,6 @@ backup:
 	@timestamp=$$(date +%Y%m%d-%H%M%S); \
 	docker cp eigenstack-vaultwarden:/data/db.sqlite3 backups/vaultwarden-$$timestamp.sqlite3
 	@docker compose up -d vaultwarden
+	@echo "🗑️  Removing backups older than 7 days..."
+	@find backups -name 'vaultwarden-*.sqlite3' -type f -mtime +7 -delete
 	@echo "✅ Backup saved to backups/"

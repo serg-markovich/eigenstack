@@ -17,7 +17,8 @@ All notable changes to this project are documented in this file.
 - Added GitHub Actions CI workflow with linting, container startup and Trivy security scan.
 - Added `Self-Maintenance` section to `claude.md`.
 - Updated `.gitignore` to exclude `traefik/certs/`.
-- Updated README with production quick-start instructions.
+- Updated README with production quick-start and backup instructions.
+- Added automatic backup rotation (keeps 7 days).
 - Deployed and verified the stack on a VPS.
 
 ## [1.0.0] - 2026-04-21

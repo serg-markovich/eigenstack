@@ -117,8 +117,10 @@ crontab -e
 ```
 
 ```cron
-0 3 * * * cd ~/eigenstack && make backup
+0 3 * * * cd ~/eigenstack && make backup >> ~/eigenstack/backups/backup.log 2>&1
 ```
+
+Backups older than 7 days are removed automatically.
 
 ## Security highlights
 
