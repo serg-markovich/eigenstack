@@ -141,17 +141,20 @@ sudo cp fail2ban/filter.d/traefik-dashboard.conf /etc/fail2ban/filter.d/
 sudo cp fail2ban/jail.d/traefik-dashboard.conf /etc/fail2ban/jail.d/
 ```
 
-Edit the jail config and set the correct `logpath`:
+Edit the jail config and set the correct `logpath` and `backend`:
 
 ```bash
 sudo nano /etc/fail2ban/jail.d/traefik-dashboard.conf
 ```
 
-Replace `/path/to/eigenstack/logs/traefik/access.log` with:
+Set:
 
 ```text
-logpath = /home/serg/eigenstack/logs/traefik/access.log
+logpath = /path/to/eigenstack/logs/traefik/access.log
+backend = auto
 ```
+
+Replace `/path/to/eigenstack` with the real path on your host. `backend = auto` tells fail2ban to poll the log file; on Ubuntu the default is `systemd`, which only works with journald.
 
 ### Start fail2ban
 
@@ -162,6 +165,13 @@ sudo fail2ban-client status traefik-dashboard
 ```
 
 The default jail bans an IP for 1 hour after 5 failed login attempts against the `dashboard@docker` router within 10 minutes.
+
+To avoid accidental self-lockout, add your admin IP to the jail:
+
+```text
+[traefik-dashboard]
+ignoreip = 127.0.0.1/8 ::1 <your-ip>
+```
 
 ## Security highlights
 

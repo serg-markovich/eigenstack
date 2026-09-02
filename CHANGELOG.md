@@ -17,10 +17,12 @@ All notable changes to this project are documented in this file.
 - Added GitHub Actions CI workflow with linting, container startup and Trivy security scan.
 - Added `Self-Maintenance` section to `claude.md`.
 - Updated `.gitignore` to exclude `traefik/certs/`.
-- Updated README with production quick-start and backup instructions.
+- Stopped tracking generated `traefik/certs/acme.json` in Git.
+- Updated README with production quick-start, backup and fail2ban instructions.
 - Added automatic backup rotation (keeps 7 days).
 - Added Traefik access logs and fail2ban configuration for dashboard brute-force protection.
 - Enabled `accessLog.addInternals` so dashboard 401 events are visible to fail2ban.
+- Set `backend = auto` in the fail2ban jail for file-based access log monitoring.
 - Deployed and verified the stack on a VPS.
 
 ## [1.0.0] - 2026-04-21
