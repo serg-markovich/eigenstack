@@ -161,7 +161,7 @@ sudo systemctl restart fail2ban
 sudo fail2ban-client status traefik-dashboard
 ```
 
-The default jail bans an IP for 1 hour after 5 failed login attempts within 10 minutes.
+The default jail bans an IP for 1 hour after 5 failed login attempts against the `dashboard@docker` router within 10 minutes.
 
 ## Security highlights
 
