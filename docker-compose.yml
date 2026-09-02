@@ -61,7 +61,7 @@ services:
     volumes:
       - ./traefik/traefik.yml:/traefik.yml:ro
       - ./traefik/dynamic/:/dynamic/:ro
-      - ./traefik/certs:/certs:ro
+      - ./traefik/certs:/certs
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=${TZ}
