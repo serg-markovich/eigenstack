@@ -1,21 +1,56 @@
 # eigenstack
 
-A self‑hosted personal cloud built with Docker Compose. The stack consists of Traefik as a reverse proxy, a Docker socket proxy, and Vaultwarden for password management. All services are defined once and configured via a single `.env` file.
+A self-hosted personal cloud built with Docker Compose. The stack consists of Traefik as a reverse proxy, a Docker socket proxy, and Vaultwarden for password management. All services are defined once and configured via a single `.env` file.
 
 ## Stack
 
 | Service | Role |
 |---------|------|
-| Traefik | Reverse proxy with automatic TLS (ACME – staging by default) |
-| docker‑socket‑proxy | Secure read‑only access to the Docker daemon |
-| Vaultwarden | Self‑hosted Bitwarden‑compatible password manager |
+| Traefik | Reverse proxy with automatic TLS via Let's Encrypt |
+| docker-socket-proxy | Secure read-only access to the Docker daemon |
+| Vaultwarden | Self-hosted Bitwarden-compatible password manager |
 | Whoami *(optional)* | Simple service to verify routing – disabled in production |
+
+## Quick start (production)
+
+**Prerequisites**
+- Ubuntu 24.04 (or similar)
+- Docker + Docker Compose v2
+- A public domain pointing to your server
+- Ports 80 and 443 open to the internet
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/serg-markovich/eigenstack.git
+cd eigenstack
+
+# 2. Create environment file from the production template
+cp .env.prod .env
+# edit .env:
+#   BASE_DOMAIN=yourdomain.de
+#   ACME_EMAIL=admin@yourdomain.de
+#   VAULTWARDEN_HOST=vault.yourdomain.de
+#   TRAEFIK_DASHBOARD_HOST=traefik.yourdomain.de
+#   TRAEFIK_DASHBOARD_AUTH=<htpasswd hash with $$ escaped>
+#   VAULTWARDEN_ADMIN_TOKEN=<secure random token>
+
+# 3. Start the stack
+make up
+```
+
+### Verification
+
+```bash
+make status
+curl -v https://vault.yourdomain.de
+curl -v -u admin:yourpassword https://traefik.yourdomain.de
+```
 
 ## Quick start (local)
 
 **Prerequisites**
 - Ubuntu 24.04 (or similar)
-- Docker + Docker Compose v2
+- Docker + Docker Compose v2
 - `mkcert` (for local TLS)
 
 ```bash
@@ -23,8 +58,8 @@ A self‑hosted personal cloud built with Docker Compose. The stack consists of 
 sudo apt install mkcert
 
 # 2. Clone the repository
-git clone https://github.com/serg-markovich/eigen-stack.git
-cd eigen-stack
+git clone https://github.com/serg-markovich/eigenstack.git
+cd eigenstack
 
 # 3. Create a local environment file
 cp .env.example .env
@@ -43,13 +78,13 @@ make up
 make status                # containers should be up
 curl -k https://vault.eigenstack.local   # Vaultwarden UI
 curl -k https://traefik.eigenstack.local # Traefik dashboard
-# (whoami is disabled; enable it in docker‑compose.yml if needed)
+# (whoami is disabled; enable it in docker-compose.yml if needed)
 ```
 
 ## Project layout
 
 ```
-eigen-stack/
+eigenstack/
 ├─ docker-compose.yml
 ├─ .env.example
 ├─ .env.prod          # template for production deployment
@@ -57,20 +92,21 @@ eigen-stack/
 ├─ traefik/
 │  ├─ traefik.yml
 │  └─ dynamic/
-├─ certs/             # local mkcert certificates (git‑ignored)
-└─ docs/              # architecture notes
+├─ certs/             # local mkcert / ACME certificates (git-ignored)
+└─ CHANGELOG.md
 ```
 
 ## Security highlights
 
-- Docker socket is never exposed directly; access is via `socket‑proxy`.
-- TLS is enforced for all services. In production replace the ACME staging endpoint with the live Let’s Encrypt server.
-- Vaultwarden sign‑ups are disabled; admin access is protected by a token.
+- Docker socket is never exposed directly; access is via `socket-proxy`.
+- TLS is enforced for all services using Let's Encrypt production certificates.
+- Vaultwarden sign-ups are disabled; admin access is protected by a token.
+- Traefik dashboard is protected by HTTP basic authentication.
 - All containers run with `no-new-privileges:true`.
 
 ## Production notes
 
-Use the `.env.prod` template, replace placeholders with real values, and switch Traefik to the Let’s Encrypt production ACME server. Deploy the stack on your server (e.g., Hetzner) and remove the `whoami` service.
+Use the `.env.prod` template, replace placeholders with real values, and deploy the stack on your server (e.g., Hetzner). Remove or keep disabled the optional `whoami` service. Ensure that ports 80 and 443 are reachable from the internet so Let's Encrypt HTTP challenges succeed.
 
 ## License
 
