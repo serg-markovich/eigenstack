@@ -36,12 +36,11 @@ providers:
     directory: /dynamic/
     watch: true
 
-# --- ACME (Let's Encrypt) Staging ---
-# Production will switch to the live ACME server
+# --- ACME (Let's Encrypt) Production ---
 certificatesResolvers:
   le:
     acme:
       storage: /certs/acme.json
-      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      caServer: https://acme-v02.api.letsencrypt.org/directory
       httpChallenge:
         entryPoint: web
