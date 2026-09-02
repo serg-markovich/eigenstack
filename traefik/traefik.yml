@@ -41,7 +41,6 @@ providers:
 certificatesResolvers:
   le:
     acme:
-      email: ${ACME_EMAIL}
       storage: /certs/acme.json
       caServer: https://acme-staging-v02.api.letsencrypt.org/directory
       httpChallenge:
