@@ -65,6 +65,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - TZ=${TZ}
+      - ACME_EMAIL=${ACME_EMAIL}
       - DOCKER_API_VERSION=1.54
     labels:
       - "traefik.enable=true"

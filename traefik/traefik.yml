@@ -38,17 +38,11 @@ providers:
 
 # --- ACME (Let's Encrypt) Staging ---
 # Production will switch to the live ACME server
-tls:
-  stores:
-    default:
-      defaultCertificate:
-        certFile: /certs/acme.json
-        keyFile: /certs/acme.json
-  certificatesResolvers:
-    le:
-      acme:
-        email: ${ACME_EMAIL}
-        storage: /certs/acme.json
-        caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-        httpChallenge:
-          entryPoint: web
+certificatesResolvers:
+  le:
+    acme:
+      email: ${ACME_EMAIL}
+      storage: /certs/acme.json
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      httpChallenge:
+        entryPoint: web
